@@ -1,65 +1,65 @@
 /**
- * 生产模式下的服务器入口
- * 使用 NODE_ENV=production node production.js 来启动
- */
-process.env.NODE_ENV = 'production';
+* 生产模式下的服务器入口
+* 使用 NODE_ENV=production node production.js 来启动
+* /
+过程.环境.NODE_ENV = '生产环境';
 
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const path = require('path');
-const http = require('http');
+常量 { 创建服务器 } = 需要('http');
+常量 { 解析 } = 需要('网址');
+常量 下一个 = 需要('下一个');
+常量 路径 = 需要('路径');
+常量 http = 需要('http');
 const { createWebSocketServer } = require('./websocket');
 
 // 调用 generate-manifest.js 生成 manifest.json
-function generateManifest() {
-  console.log('Generating manifest.json for Docker deployment...');
+函数 生成清单() {
+  控制台.日志('正在为Docker部署生成manifest.json...');
 
-  try {
-    const generateManifestScript = path.join(
-      __dirname,
-      'scripts',
+  尝试 {
+    常量 生成清单脚本 = 路径.连接(
+      __dirname，
+      '脚本',
       'generate-manifest.js'
     );
-    require(generateManifestScript);
-  } catch (error) {
-    console.error('❌ Error calling generate-manifest.js:', error);
-    throw error;
+    需要(生成清单脚本);
+  } 捕获 (错误) {
+    控制台.错误('❌ 调用 generate-manifest.js 时出错:', 错误);
+    抛出 错误;
   }
 }
 
 // 生成manifest
-generateManifest();
+生成清单();
 
-const hostname = process.env.HOSTNAME || '0.0.0.0';
-const port = process.env.PORT || 3000;
+常量 主机名 = 过程.环境.HOSTNAME || '0.0.0.0';
+常量 端口 = 进程.环境.端口 || 3000;
 
 // 在生产模式下初始化 Next.js
-const app = next({
-  dev: false,
-  hostname,
-  port
+常量 应用 = 下一个({
+  开发：否，
+  主机名,
+  端口
 });
 
-const handle = app.getRequestHandler();
+常量 句柄 = 应用.获取请求句柄();
 
-app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
-    try {
+应用程序.准备().然后(() => {
+  常量 服务器 = 创建服务器(异步 (请求, 响应) => {
+    尝试 {
       // 检查是否是WebSocket升级请求，如果是则跳过Next.js处理
       const upgrade = req.headers.upgrade;
       if (upgrade && upgrade.toLowerCase() === 'websocket') {
-        // 不处理WebSocket升级请求，让upgrade事件处理器处理
+// 不处理WebSocket升级请求，让upgrade事件处理器处理
         return;
       }
 
-      // 使用Next.js处理所有非WebSocket请求
+// 使用Next.js处理所有非WebSocket请求
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
-      console.error('处理请求时出错:', req.url, err);
-      res.statusCode = 500;
-      res.end('内部服务器错误');
+      控制台.错误('处理请求时出错:', req.url, err);
+      响应.状态码 = 500;
+      资源.结束('内部服务器错误');
     }
   });
 
@@ -129,21 +129,21 @@ function setupServerTasks() {
 
         setTimeout(() => {
           // 服务器启动后，立即执行一次 cron 任务
-          executeCronJob();
-        }, 3000);
+        #  executeCronJob();
+      #  }, 3000);
 
         // 然后设置每小时执行一次 cron 任务
-        setInterval(() => {
-          executeCronJob();
-        }, 60 * 60 * 1000); // 每小时执行一次
-      }
-    });
+       # setInterval(() => {
+        #  executeCronJob();
+       # }, 60 * 60 * 1000); // 每小时执行一次
+     # }
+ #   });
 
-    req.setTimeout(2000, () => {
-      req.destroy();
-    });
-  }, 1000);
-}
+  #  req.setTimeout(2000, () => {
+  #    req.destroy();
+   # });
+#  }, 1000);
+#}
 
 // 执行 cron 任务的函数
 function executeCronJob() {
